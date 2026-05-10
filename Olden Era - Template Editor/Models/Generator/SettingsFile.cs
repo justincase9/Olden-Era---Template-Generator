@@ -60,6 +60,9 @@ namespace Olden_Era___Template_Editor.Models
         [JsonPropertyName("tournamentPointsToWin")] public int TournamentPointsToWin        { get; set; } = 2;
         [JsonPropertyName("tournamentSaveArmy")] public bool TournamentSaveArmy             { get; set; } = true;
         [JsonPropertyName("contentPoolPreset")] public string ContentPoolPreset             { get; set; } = "Generic";
+        [JsonPropertyName("bannedItems")]        public string BannedItems                  { get; set; } = "";
+        [JsonPropertyName("bannedMagics")]       public string BannedMagics                 { get; set; } = "";
+        [JsonPropertyName("valueOverrides")]     public string ValueOverridesText           { get; set; } = "";
 
         // Legacy setting from v0.2 and earlier; when present, it seeds both split density sliders.
         [JsonPropertyName("contentDensity")]    public int?    ContentDensityPercent        { get; set; }
