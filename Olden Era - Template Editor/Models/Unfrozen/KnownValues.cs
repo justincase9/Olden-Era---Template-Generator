@@ -29,6 +29,33 @@ namespace OldenEraTemplateEditor.Models
 
         public static readonly int[] AllMapSizes = [.. MapSizes, .. ExperimentalMapSizes];
 
+        // ── Content pool presets ─────────────────────────────────────────────────
+
+        /// <summary>
+        /// Human-readable labels for each content pool preset.
+        /// Index-aligned with <see cref="ContentPoolPresetIds"/>.
+        /// </summary>
+        public static readonly string[] ContentPoolPresetLabels =
+        [
+            "Generic (Classic Tiers)",
+            "Jebus Cross style",
+            "Exodus style",
+            "Crossroads style",
+            "Kerberos style",
+        ];
+
+        /// <summary>
+        /// Content pool preset IDs, aligned with <see cref="ContentPoolPresetLabels"/>.
+        /// </summary>
+        public static readonly string[] ContentPoolPresetIds =
+        [
+            "Generic",
+            "JebusCross",
+            "Exodus",
+            "Crossroads",
+            "Kerberos",
+        ];
+
         public static int MaxOfficialMapSize => MapSizes[^1];
 
         public static bool IsExperimentalMapSize(int size) =>

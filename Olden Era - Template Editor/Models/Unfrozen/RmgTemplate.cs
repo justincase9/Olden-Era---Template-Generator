@@ -44,6 +44,12 @@ namespace OldenEraTemplateEditor.Models
         [JsonPropertyName("contentCountLimits")]
         public List<ContentCountLimit>? ContentCountLimits { get; set; }
 
+        [JsonPropertyName("border")]
+        public Border? Border { get; set; }
+
+        [JsonPropertyName("orientation")]
+        public Orientation? Orientation { get; set; }
+
         [JsonPropertyName("contentPools")]
         public List<object>? ContentPools { get; set; }
 

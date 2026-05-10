@@ -171,6 +171,8 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="8"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="8"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <Label Grid.Row="0" Grid.Column="0" Content="Template Name"/>
                             <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtTemplateName" Text="Custom Template"/>
@@ -201,6 +203,9 @@
                                     Minimum="2" Maximum="8" Value="2"
                                     TickFrequency="1" IsSnapToTickEnabled="True"
                                     ValueChanged="Slider_ValueChanged"/>
+                            <Label Grid.Row="8" Grid.Column="0" Content="Content pool style"/>
+                            <ComboBox Grid.Row="8" Grid.Column="1" x:Name="CmbContentPoolPreset"
+                                      SelectionChanged="CmbContentPoolPreset_SelectionChanged"/>
                         </Grid>
                     </StackPanel>
                     </ScrollViewer>

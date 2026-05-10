@@ -40,9 +40,10 @@ namespace Olden_Era___Template_Editor
         [
             (MapTopology.Random,      "Random",        "Zones are placed at random positions. Each zone connects to all zones that border it — no fixed structure."),
             (MapTopology.Default,     "Ring",          "All zones are arranged in a circle. Each zone connects to the two zones next to it."),
-            (MapTopology.HubAndSpoke, "Hub",   "All zones connect to a shared central hub. Players never border each other directly."),
-            (MapTopology.Chain,       "Chain",         "Zones are connected in a straight line from one end to the other, with no wrap-around.")
-            ];
+            (MapTopology.HubAndSpoke, "Hub",           "All zones connect to a shared central hub. Players never border each other directly."),
+            (MapTopology.Chain,       "Chain",         "Zones are connected in a straight line from one end to the other, with no wrap-around."),
+            (MapTopology.SharedWeb,   "Shared Web",    "All players connect to a single shared neutral zone. Players are never directly adjacent to each other."),
+        ];
 
         public MainWindow()
         {
@@ -68,6 +69,8 @@ namespace Olden_Era___Template_Editor
             CmbVictory.SelectedIndex = 0; // Classic (win_condition_1)
             CmbTopology.ItemsSource = TopologyOptions.Select(t => t.Label).ToList();
             CmbTopology.SelectedIndex = 0; // Random is first
+            CmbContentPoolPreset.ItemsSource = KnownValues.ContentPoolPresetLabels;
+            CmbContentPoolPreset.SelectedIndex = 0; // Generic
             UpdateValueLabels();
             UpdateAdvancedZoneSettingsVisibility();
             UpdatePlayerCastleFactionVisibility();
@@ -448,6 +451,13 @@ namespace Olden_Era___Template_Editor
             Validate();
         }
 
+        private void CmbContentPoolPreset_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            MarkDirty();
+            Validate();
+        }
+
         private void CmbMapSize_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (!IsInitialized || _isRefreshingMapSizes) return;
@@ -699,6 +709,9 @@ namespace Olden_Era___Template_Editor
             HeroCountMax          = (int)SldHeroMax.Value,
             HeroCountIncrement    = (int)SldHeroIncrement.Value,
             Topology              = TopologyOptions[CmbTopology.SelectedIndex].Topology,
+            ContentPoolPreset     = CmbContentPoolPreset.SelectedIndex >= 0 && CmbContentPoolPreset.SelectedIndex < KnownValues.ContentPoolPresetIds.Length
+                ? KnownValues.ContentPoolPresetIds[CmbContentPoolPreset.SelectedIndex]
+                : "Generic",
             RandomPortals         = ChkRandomPortals.IsChecked == true,
             MaxPortalConnections  = (int)SldMaxPortals.Value,
             SpawnRemoteFootholds  = ChkSpawnFootholds.IsChecked == true,
@@ -725,6 +738,7 @@ namespace Olden_Era___Template_Editor
             TournamentFirstTournamentDay = (int)SldTournamentFirstTournamentDay.Value,
             TournamentInterval = (int)SldTournamentInterval.Value,
             TournamentPointsToWin = (int)SldTournamentPointsToWin.Value,
+            TournamentSaveArmy = ChkTournamentSaveArmy.IsChecked == true,
         };
 
         private void ApplySettings(SettingsFile s)
@@ -758,6 +772,8 @@ namespace Olden_Era___Template_Editor
             SldHeroIncrement.Value  = s.HeroCountIncrement;
             int topoIdx = Array.FindIndex(TopologyOptions, t => t.Topology == s.Topology);
             if (topoIdx >= 0) CmbTopology.SelectedIndex = topoIdx;
+            int presetIdx = Array.IndexOf(KnownValues.ContentPoolPresetIds, s.ContentPoolPreset);
+            CmbContentPoolPreset.SelectedIndex = presetIdx >= 0 ? presetIdx : 0;
             ChkRandomPortals.IsChecked        = s.RandomPortals;
             SldMaxPortals.Value               = Math.Clamp(s.MaxPortalConnections, 1, 32);
             PnlMaxPortals.Visibility          = s.RandomPortals ? Visibility.Visible : Visibility.Collapsed;
@@ -1023,6 +1039,9 @@ namespace Olden_Era___Template_Editor
             SpawnRemoteFootholds = ChkSpawnFootholds.IsChecked == true,
             GenerateRoads = ChkGenerateRoads.IsChecked == true,
             Topology = CmbTopology.SelectedIndex >= 0 ? TopologyOptions[CmbTopology.SelectedIndex].Topology : MapTopology.Default,
+            ContentPoolPreset = CmbContentPoolPreset.SelectedIndex >= 0 && CmbContentPoolPreset.SelectedIndex < KnownValues.ContentPoolPresetIds.Length
+                ? KnownValues.ContentPoolPresetIds[CmbContentPoolPreset.SelectedIndex]
+                : "Generic",
             FactionLawsExpPercent = (int)SldFactionLawsExp.Value,
             AstrologyExpPercent = (int)SldAstrologyExp.Value,
             GladiatorArenaRules = new GladiatorArenaRules

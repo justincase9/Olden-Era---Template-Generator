@@ -56,7 +56,8 @@ namespace Olden_Era___Template_Editor.Services
                 settings.ZoneCfg.StructureDensityPercent / 100.0,
                 settings.ZoneCfg.NeutralStackStrengthPercent / 100.0,
                 settings.ZoneCfg.BorderGuardStrengthPercent / 100.0,
-                EffectiveGuardRandomization(settings));
+                EffectiveGuardRandomization(settings),
+                ResolveContentPoolPreset(settings.ContentPoolPreset));
 
             string effectiveVictoryCondition = settings.GameEndConditions.VictoryCondition;
 
@@ -148,6 +149,24 @@ namespace Olden_Era___Template_Editor.Services
             int ExtraCityGuardValue,
             string PrimaryBuildingsConstructionSid,
             string ExtraBuildingsConstructionSid);
+
+        /// <summary>
+        /// Defines the content pool names used for each zone type in a preset.
+        /// Spawn = player starting zone; Low/Medium/High = neutral zone quality tiers.
+        /// </summary>
+        private sealed record ContentPoolPresetDefinition(
+            string[] SpawnGuarded,
+            string[] SpawnUnguarded,
+            string[] SpawnResources,
+            string[] LowGuarded,
+            string[] LowUnguarded,
+            string[] LowResources,
+            string[] MediumGuarded,
+            string[] MediumUnguarded,
+            string[] MediumResources,
+            string[] HighGuarded,
+            string[] HighUnguarded,
+            string[] HighResources);
 
         private static List<NeutralZonePlan> BuildNeutralZonePlan(GeneratorSettings settings)
         {
@@ -445,7 +464,8 @@ namespace Olden_Era___Template_Editor.Services
             double StructureDensityMultiplier,
             double NeutralStackStrengthMultiplier,
             double BorderGuardStrengthMultiplier,
-            double GuardRandomization);
+            double GuardRandomization,
+            ContentPoolPresetDefinition PoolPreset);
 
         private static int ScaleValue(double value, double multiplier) =>
             Math.Max(0, (int)(value * multiplier));
@@ -2018,9 +2038,9 @@ namespace Olden_Era___Template_Editor.Services
                 GuardWeeklyIncrement = 0.20,
                 GuardReactionDistribution = [60, 20, 10, 10, 2, 0],
                 DiplomacyModifier = -0.5,
-                GuardedContentPool = [.. T2GuardedPools],
-                UnguardedContentPool = [.. T2UnguardedPools],
-                ResourcesContentPool = [.. GeneralResourcesPoor],
+                GuardedContentPool = [.. tuning.PoolPreset.SpawnGuarded],
+                UnguardedContentPool = [.. tuning.PoolPreset.SpawnUnguarded],
+                ResourcesContentPool = [.. tuning.PoolPreset.SpawnResources],
                 MandatoryContent = [$"mandatory_content_side_{letter}"],
                 ContentCountLimits = BuildSideContentLimits(),
                 GuardedContentValue = ScaleStructureValue(200000 * tuning.ContentScale, tuning),
@@ -2047,7 +2067,7 @@ namespace Olden_Era___Template_Editor.Services
             string letter = plan.Letter;
             // When this zone is the hold city target, guarantee it has at least one castle.
             int castleCount = isHoldCity ? Math.Max(1, plan.CastleCount) : plan.CastleCount;
-            var profile = GetNeutralZoneProfile(plan.Quality);
+            var profile = GetNeutralZoneProfile(plan.Quality, tuning.PoolPreset);
 
             var mainObjects = new List<MainObject>();
             if (castleCount > 0)
@@ -2206,15 +2226,92 @@ namespace Olden_Era___Template_Editor.Services
         private static readonly string[] GeneralResourcesMedium = ["content_pool_general_resources_start_zone_medium"];
         private static readonly string[] GeneralResourcesRich   = ["content_pool_general_resources_start_zone_rich"];
 
-        private static NeutralZoneProfile GetNeutralZoneProfile(NeutralZoneQuality quality) => quality switch
+        private static readonly Dictionary<string, ContentPoolPresetDefinition> ContentPoolPresets =
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Generic"] = new ContentPoolPresetDefinition(
+                    SpawnGuarded:   T2GuardedPools,
+                    SpawnUnguarded: T2UnguardedPools,
+                    SpawnResources: ["content_pool_general_resources_start_zone_poor"],
+                    LowGuarded:     T2GuardedPools,
+                    LowUnguarded:   T2UnguardedPools,
+                    LowResources:   ["content_pool_general_resources_start_zone_poor"],
+                    MediumGuarded:   T3GuardedPools,
+                    MediumUnguarded: T3UnguardedPools,
+                    MediumResources: ["content_pool_general_resources_start_zone_medium"],
+                    HighGuarded:   [.. T4GuardedPools, .. T5GuardedPools],
+                    HighUnguarded: [.. T4UnguardedPools, .. T5UnguardedPools],
+                    HighResources: ["content_pool_general_resources_start_zone_rich"]),
+
+                ["JebusCross"] = new ContentPoolPresetDefinition(
+                    SpawnGuarded:   ["template_pool_jebus_cross_guarded_start_zone"],
+                    SpawnUnguarded: ["template_pool_jebus_cross_unguarded_start_zone"],
+                    SpawnResources: ["content_pool_general_resources_start_zone_medium"],
+                    LowGuarded:     ["template_pool_jebus_cross_guarded_side_zone"],
+                    LowUnguarded:   ["template_pool_jebus_cross_unguarded_side_zone"],
+                    LowResources:   ["content_pool_general_resources_treasure_zone_poor"],
+                    MediumGuarded:   ["template_pool_jebus_cross_guarded_side_zone"],
+                    MediumUnguarded: ["template_pool_jebus_cross_unguarded_side_zone"],
+                    MediumResources: ["content_pool_general_resources_treasure_zone_medium"],
+                    HighGuarded:   ["template_pool_jebus_cross_guarded_center_zone"],
+                    HighUnguarded: ["template_pool_jebus_cross_unguarded_center_zone"],
+                    HighResources: ["content_pool_general_resources_treasure_zone_rich_no_scrolls"]),
+
+                ["Exodus"] = new ContentPoolPresetDefinition(
+                    SpawnGuarded:   ["template_pool_exodus_guarded_start_zone"],
+                    SpawnUnguarded: ["template_pool_exodus_unguarded_start_zone"],
+                    SpawnResources: ["content_pool_general_resources_start_zone_medium"],
+                    LowGuarded:     ["template_pool_exodus_guarded_side_zone"],
+                    LowUnguarded:   ["template_pool_exodus_unguarded_side_zone"],
+                    LowResources:   ["content_pool_general_resources_treasure_zone_poor"],
+                    MediumGuarded:   ["template_pool_exodus_guarded_treasure_zone"],
+                    MediumUnguarded: ["template_pool_exodus_unguarded_treasure_zone"],
+                    MediumResources: ["content_pool_general_resources_treasure_zone_medium"],
+                    HighGuarded:   ["template_pool_exodus_guarded_supertreasure_zone"],
+                    HighUnguarded: ["template_pool_exodus_unguarded_supertreasure_zone"],
+                    HighResources: ["content_pool_general_resources_treasure_zone_rich"]),
+
+                ["Crossroads"] = new ContentPoolPresetDefinition(
+                    SpawnGuarded:   ["template_pool_crossroads_guarded_start_zone"],
+                    SpawnUnguarded: ["template_pool_crossroads_unguarded_start_zone"],
+                    SpawnResources: ["content_pool_general_resources_start_zone_medium"],
+                    LowGuarded:     ["template_pool_crossroads_guarded_connector_zone"],
+                    LowUnguarded:   ["template_pool_crossroads_unguarded_connector_zone"],
+                    LowResources:   ["content_pool_general_resources_treasure_zone_poor"],
+                    MediumGuarded:   ["template_pool_crossroads_guarded_treasure_zone"],
+                    MediumUnguarded: ["template_pool_crossroads_unguarded_treasure_zone"],
+                    MediumResources: ["content_pool_general_resources_treasure_zone_medium"],
+                    HighGuarded:   ["template_pool_crossroads_guarded_supertreasure_zone"],
+                    HighUnguarded: ["template_pool_crossroads_unguarded_supertreasure_zone"],
+                    HighResources: ["content_pool_general_resources_treasure_zone_rich"]),
+
+                ["Kerberos"] = new ContentPoolPresetDefinition(
+                    SpawnGuarded:   ["content_pool_template_kerberos_guarded_start_zone"],
+                    SpawnUnguarded: ["content_pool_template_kerberos_unguarded_start_zone"],
+                    SpawnResources: ["content_pool_general_resources_start_zone_medium"],
+                    LowGuarded:     ["content_pool_template_kerberos_guarded_connector_zone"],
+                    LowUnguarded:   ["content_pool_template_kerberos_unguarded_connector_zone"],
+                    LowResources:   ["content_pool_general_resources_treasure_zone_poor"],
+                    MediumGuarded:   ["content_pool_template_kerberos_guarded_treasure_zone"],
+                    MediumUnguarded: ["content_pool_template_kerberos_unguarded_treasure_zone"],
+                    MediumResources: ["content_pool_general_resources_treasure_zone_medium"],
+                    HighGuarded:   ["content_pool_template_kerberos_guarded_supertreasure_zone"],
+                    HighUnguarded: ["content_pool_template_kerberos_unguarded_supertreasure_zone"],
+                    HighResources: ["content_pool_general_resources_treasure_zone_rich"]),
+            };
+
+        private static ContentPoolPresetDefinition ResolveContentPoolPreset(string? presetId) =>
+            ContentPoolPresets.TryGetValue(presetId ?? "Generic", out var def) ? def : ContentPoolPresets["Generic"];
+
+        private static NeutralZoneProfile GetNeutralZoneProfile(NeutralZoneQuality quality, ContentPoolPresetDefinition preset) => quality switch
         {
-            // Low — t2 pools, zone_layout_sides, guard mult ~1.1, poor resources
+            // Low — zone_layout_sides, guard mult ~1.1, poor resources
             NeutralZoneQuality.Low => new NeutralZoneProfile(
                 SideLayoutName,
                 1.1,
-                T2GuardedPools,
-                T2UnguardedPools,
-                GeneralResourcesPoor,
+                preset.LowGuarded,
+                preset.LowUnguarded,
+                preset.LowResources,
                 120000,
                 1000,
                 25000,
@@ -2225,13 +2322,13 @@ namespace Olden_Era___Template_Editor.Services
                 2000,
                 "poor_buildings_construction",
                 "poor_buildings_construction"),
-            // High — t4+t5 pools mixed, zone_layout_treasures, guard mult ~1.8, rich resources
+            // High — zone_layout_treasures, guard mult ~1.8, rich resources
             NeutralZoneQuality.High => new NeutralZoneProfile(
                 TreasureLayoutName,
                 1.8,
-                [.. T4GuardedPools, .. T5GuardedPools],
-                [.. T4UnguardedPools, .. T5UnguardedPools],
-                GeneralResourcesRich,
+                preset.HighGuarded,
+                preset.HighUnguarded,
+                preset.HighResources,
                 480000,
                 3000,
                 80000,
@@ -2242,13 +2339,13 @@ namespace Olden_Era___Template_Editor.Services
                 8000,
                 "rich_buildings_construction",
                 "rich_buildings_construction"),
-            // Medium — t3 pools, zone_layout_sides or treasures, guard mult ~1.4, medium resources
+            // Medium — zone_layout_treasures, guard mult ~1.4, medium resources
             _ => new NeutralZoneProfile(
                 TreasureLayoutName,
                 1.4,
-                T3GuardedPools,
-                T3UnguardedPools,
-                GeneralResourcesMedium,
+                preset.MediumGuarded,
+                preset.MediumUnguarded,
+                preset.MediumResources,
                 240000,
                 2000,
                 38000,
