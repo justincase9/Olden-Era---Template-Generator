@@ -1,0 +1,35 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #161210;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(90,74,40,0.18) 0%, transparent 70%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.04) 3px,
+      rgba(0,0,0,0.04) 4px
+    );
+  color: #E8D5A3;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #1a1610; }
+::-webkit-scrollbar-thumb { background: #5A4A28; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #C9A84C; }
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid #C9A84C;
+  outline-offset: 2px;
+}
+
