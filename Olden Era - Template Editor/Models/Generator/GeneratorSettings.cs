@@ -80,6 +80,13 @@ namespace Olden_Era___Template_Editor.Models
         public int FactionLawsExpPercent { get; set; } = 100;
         public int AstrologyExpPercent { get; set; } = 100;
         public List<ContentItem> PlayerZoneMandatoryContent { get; set; } = new List<ContentItem>();
+        /// <summary>User-configured extra mandatory content for low-quality neutral zones.
+        /// When non-empty, replaces the built-in ZoneContentManager defaults for this tier.</summary>
+        public List<ContentItem> LowZoneMandatoryContent { get; set; } = new List<ContentItem>();
+        /// <summary>User-configured extra mandatory content for medium-quality neutral zones.</summary>
+        public List<ContentItem> MedZoneMandatoryContent { get; set; } = new List<ContentItem>();
+        /// <summary>User-configured extra mandatory content for high-quality neutral zones.</summary>
+        public List<ContentItem> HighZoneMandatoryContent { get; set; } = new List<ContentItem>();
         public GameEndConditions GameEndConditions { get; set; } = new GameEndConditions();
         public GladiatorArenaRules GladiatorArenaRules { get; set; } = new GladiatorArenaRules();
         public TournamentRules TournamentRules { get; set; } = new TournamentRules();

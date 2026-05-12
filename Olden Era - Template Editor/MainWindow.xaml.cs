@@ -42,6 +42,27 @@ namespace Olden_Era___Template_Editor
         private readonly ObservableCollection<ZoneContentItemUI> _randomHires = new();
         private readonly ObservableCollection<ZoneContentItemUI> _resourceBanks = new();
 
+        // Low neutral zone content
+        private readonly ObservableCollection<ZoneContentItemUI> _lowZoneMines      = new();
+        private readonly ObservableCollection<ZoneContentItemUI> _lowZoneTreasures  = new();
+        private readonly ObservableCollection<ZoneContentItemUI> _lowZoneHires      = new();
+        private readonly ObservableCollection<ZoneContentItemUI> _lowZoneBanks      = new();
+        private readonly ObservableCollection<ZoneContentItemUI> _lowZoneBuildings  = new();
+
+        // Medium neutral zone content
+        private readonly ObservableCollection<ZoneContentItemUI> _medZoneMines      = new();
+        private readonly ObservableCollection<ZoneContentItemUI> _medZoneTreasures  = new();
+        private readonly ObservableCollection<ZoneContentItemUI> _medZoneHires      = new();
+        private readonly ObservableCollection<ZoneContentItemUI> _medZoneBanks      = new();
+        private readonly ObservableCollection<ZoneContentItemUI> _medZoneBuildings  = new();
+
+        // High neutral zone content
+        private readonly ObservableCollection<ZoneContentItemUI> _highZoneMines     = new();
+        private readonly ObservableCollection<ZoneContentItemUI> _highZoneTreasures = new();
+        private readonly ObservableCollection<ZoneContentItemUI> _highZoneHires     = new();
+        private readonly ObservableCollection<ZoneContentItemUI> _highZoneBanks     = new();
+        private readonly ObservableCollection<ZoneContentItemUI> _highZoneBuildings = new();
+
         private static readonly (MapTopology Topology, string Label, string Description)[] TopologyOptions =
         [
             (MapTopology.Balanced,    "Balanced",      "Zones are placed on concentric rings by quality tier. Players are on the outer ring; neutral zones form inner rings. Each zone connects to neighbouring zones across adjacent rings."),
@@ -85,7 +106,22 @@ namespace Olden_Era___Template_Editor
                 MineContentItems = _zoneContentMines,
                 TreasureContentItems = _treasureContentItems,
                 RandomHireContentItems = _randomHires,
-                ResourceBankContentItems = _resourceBanks
+                ResourceBankContentItems = _resourceBanks,
+                LowZoneMines      = _lowZoneMines,
+                LowZoneTreasures  = _lowZoneTreasures,
+                LowZoneHires      = _lowZoneHires,
+                LowZoneBanks      = _lowZoneBanks,
+                LowZoneBuildings  = _lowZoneBuildings,
+                MedZoneMines      = _medZoneMines,
+                MedZoneTreasures  = _medZoneTreasures,
+                MedZoneHires      = _medZoneHires,
+                MedZoneBanks      = _medZoneBanks,
+                MedZoneBuildings  = _medZoneBuildings,
+                HighZoneMines     = _highZoneMines,
+                HighZoneTreasures = _highZoneTreasures,
+                HighZoneHires     = _highZoneHires,
+                HighZoneBanks     = _highZoneBanks,
+                HighZoneBuildings = _highZoneBuildings,
             };
             // Fire-and-forget background update check — never blocks the UI.
             _ = CheckForUpdateAsync(version);
@@ -172,6 +208,26 @@ namespace Olden_Era___Template_Editor
             CmbResourceBankContentPresetSticky.SelectedIndex = 0;
             CmbResourceBankContentPreset.SelectionChanged       += (_, _) => CmbResourceBankContentPresetSticky.SelectedIndex = CmbResourceBankContentPreset.SelectedIndex;
             CmbResourceBankContentPresetSticky.SelectionChanged += (_, _) => CmbResourceBankContentPreset.SelectedIndex       = CmbResourceBankContentPresetSticky.SelectedIndex;
+
+            /* Building preset names shared across all tier Building ComboBoxes */
+            var buildingPresetNames = new List<string>();
+            foreach (SidMapping sidMapping in ContentItemGroup.Buildings)
+                buildingPresetNames.Add(sidMapping.Name);
+
+            /* Populate neutral zone tier preset ComboBoxes */
+            foreach (var (mine, treasure, hire, bank, building) in new[]
+            {
+                (CmbLowMinePreset,  CmbLowTreasurePreset,  CmbLowHirePreset,  CmbLowBankPreset,  CmbLowBuildingPreset),
+                (CmbMedMinePreset,  CmbMedTreasurePreset,  CmbMedHirePreset,  CmbMedBankPreset,  CmbMedBuildingPreset),
+                (CmbHighMinePreset, CmbHighTreasurePreset, CmbHighHirePreset, CmbHighBankPreset, CmbHighBuildingPreset),
+            })
+            {
+                mine.ItemsSource     = mineNames;             mine.SelectedIndex     = 0;
+                treasure.ItemsSource = treasurePresetNames;   treasure.SelectedIndex = 0;
+                hire.ItemsSource     = randomHirePresetNames; hire.SelectedIndex     = 0;
+                bank.ItemsSource     = resourceBankPresetNames; bank.SelectedIndex   = 0;
+                building.ItemsSource = buildingPresetNames;   building.SelectedIndex = 0;
+            }
         }
 
         private async Task CheckForUpdateAsync(Version? currentVersion)
@@ -791,6 +847,135 @@ namespace Olden_Era___Template_Editor
             SldNeutral.Visibility = advanced ? Visibility.Collapsed : Visibility.Visible;
             if (ChkAdvancedZoneSettings != null)
                 ChkAdvancedZoneSettings.IsChecked = advanced;
+            UpdateNeutralZoneTierTabsVisibility();
+        }
+
+        private void UpdateNeutralZoneTierTabsVisibility()
+        {
+            if (TabLowZones == null) return;
+            bool hasLow  = _advancedZoneSettings && ((int)SldNeutralLowNoCastle.Value    + (int)SldNeutralLowCastle.Value    > 0);
+            bool hasMed  = _advancedZoneSettings && ((int)SldNeutralMediumNoCastle.Value + (int)SldNeutralMediumCastle.Value > 0);
+            bool hasHigh = _advancedZoneSettings && ((int)SldNeutralHighNoCastle.Value   + (int)SldNeutralHighCastle.Value   > 0);
+
+            bool wasLow  = TabLowZones.Visibility  == Visibility.Visible;
+            bool wasMed  = TabMedZones.Visibility  == Visibility.Visible;
+            bool wasHigh = TabHighZones.Visibility == Visibility.Visible;
+
+            TabLowZones.Visibility  = hasLow  ? Visibility.Visible : Visibility.Collapsed;
+            TabMedZones.Visibility  = hasMed  ? Visibility.Visible : Visibility.Collapsed;
+            TabHighZones.Visibility = hasHigh ? Visibility.Visible : Visibility.Collapsed;
+
+            if (hasLow  && !wasLow  && IsNeutralTierEmpty(_lowZoneMines,  _lowZoneTreasures,  _lowZoneHires,  _lowZoneBanks,  _lowZoneBuildings))
+                InitializeDefaultLowZoneContents();
+            if (hasMed  && !wasMed  && IsNeutralTierEmpty(_medZoneMines,  _medZoneTreasures,  _medZoneHires,  _medZoneBanks,  _medZoneBuildings))
+                InitializeDefaultMedZoneContents();
+            if (hasHigh && !wasHigh && IsNeutralTierEmpty(_highZoneMines, _highZoneTreasures, _highZoneHires, _highZoneBanks, _highZoneBuildings))
+                InitializeDefaultHighZoneContents();
+        }
+
+        private static bool IsNeutralTierEmpty(
+            ObservableCollection<ZoneContentItemUI> mines,
+            ObservableCollection<ZoneContentItemUI> treasures,
+            ObservableCollection<ZoneContentItemUI> hires,
+            ObservableCollection<ZoneContentItemUI> banks,
+            ObservableCollection<ZoneContentItemUI> buildings)
+            => mines.Count == 0 && treasures.Count == 0 && hires.Count == 0 && banks.Count == 0 && buildings.Count == 0;
+
+        /// <summary>
+        /// Pre-populates Low zone defaults matching ZoneContentManager.BuildLowNeutralMandatoryContent.
+        /// Items that use named-only include lists (biome mines) are added using include-list SIDs.
+        /// </summary>
+        private void InitializeDefaultLowZoneContents()
+        {
+            // Mines — biome-based rare mine + fixed rare mine
+            _lowZoneMines.Add(CreateZoneContentItem(IncludeListIds.RareMinesByBiome, isGroup: true));
+            _lowZoneMines.Add(CreateZoneContentItem(IncludeListIds.RareMinesAny, isGroup: true));
+            // Utility + loot
+            _lowZoneTreasures.Add(CreateZoneContentItem(ContentIds.PandoraBox));
+            _lowZoneTreasures.Add(CreateZoneContentItem(IncludeListIds.PandoraArmyLow, isGroup: true));
+            _lowZoneTreasures.Add(CreateZoneContentItem(IncludeListIds.RandomItems, isGroup: true));
+            // Hires
+            _lowZoneHires.Add(CreateZoneContentItem(IncludeListIds.RandomHiresLowTier, count: 2, isGroup: true));
+            // Buildings
+            _lowZoneBuildings.Add(CreateZoneContentItem(ContentIds.Market, isGuarded: true));
+            _lowZoneBuildings.Add(CreateZoneContentItem(IncludeListIds.VisionBuildingsTier1, isGroup: true));
+            _lowZoneBuildings.Add(CreateZoneContentItem(IncludeListIds.HeroBuffBuildingsTier1, count: 2, isGroup: true));
+            _lowZoneBuildings.Add(CreateZoneContentItem(IncludeListIds.HeroStatsTier1, isGroup: true));
+            _lowZoneBuildings.Add(CreateZoneContentItem(IncludeListIds.MagicBuildingsTier1, isGroup: true));
+        }
+
+        /// <summary>
+        /// Pre-populates Medium zone defaults matching ZoneContentManager.BuildMediumNeutralMandatoryContent.
+        /// </summary>
+        private void InitializeDefaultMedZoneContents()
+        {
+            // Mines — full rare set + gold + alchemy lab
+            _medZoneMines.Add(CreateZoneContentItem(ContentIds.MineCrystals, roadDistance: "Next To"));
+            _medZoneMines.Add(CreateZoneContentItem(ContentIds.MineMercury, roadDistance: "Next To"));
+            _medZoneMines.Add(CreateZoneContentItem(ContentIds.MineGemstones, roadDistance: "Next To"));
+            _medZoneMines.Add(CreateZoneContentItem(ContentIds.AlchemyLab, roadDistance: "Near"));
+            _medZoneMines.Add(CreateZoneContentItem(ContentIds.MineGold, roadDistance: "Near"));
+            // Loot
+            _medZoneTreasures.Add(CreateZoneContentItem(ContentIds.RandomItemEpic));
+            _medZoneTreasures.Add(CreateZoneContentItem(ContentIds.RandomItemEpic));
+            _medZoneTreasures.Add(CreateZoneContentItem(ContentIds.PandoraBox));
+            _medZoneTreasures.Add(CreateZoneContentItem(ContentIds.PandoraBox));
+            _medZoneTreasures.Add(CreateZoneContentItem(IncludeListIds.PandoraArmyLow, isGroup: true));
+            // Hires
+            _medZoneHires.Add(CreateZoneContentItem(IncludeListIds.RandomHiresLowTier, isGroup: true));
+            _medZoneHires.Add(CreateZoneContentItem(IncludeListIds.RandomHiresHighTier, isGroup: true));
+            // Banks
+            _medZoneBanks.Add(CreateZoneContentItem(IncludeListIds.UnitBanksBiomeRestricted, isGroup: true));
+            _medZoneBanks.Add(CreateZoneContentItem(IncludeListIds.ResourceBanksTier2, isGroup: true));
+            // Buildings
+            _medZoneBuildings.Add(CreateZoneContentItem(ContentIds.Watchtower, isGuarded: true));
+            _medZoneBuildings.Add(CreateZoneContentItem(IncludeListIds.VisionBuildingsTier1, isGroup: true));
+            _medZoneBuildings.Add(CreateZoneContentItem(IncludeListIds.HeroBuffBuildingsTier1, isGroup: true));
+            _medZoneBuildings.Add(CreateZoneContentItem(IncludeListIds.HeroStatsTier1, isGroup: true));
+            _medZoneBuildings.Add(CreateZoneContentItem(IncludeListIds.HeroStatsTier2, isGroup: true));
+            _medZoneBuildings.Add(CreateZoneContentItem(IncludeListIds.MagicBuildingsTier1, isGroup: true));
+            _medZoneBuildings.Add(CreateZoneContentItem(IncludeListIds.MagicBuildingsTier2, isGroup: true));
+        }
+
+        /// <summary>
+        /// Pre-populates High zone defaults matching ZoneContentManager.BuildHighNeutralMandatoryContent.
+        /// </summary>
+        private void InitializeDefaultHighZoneContents()
+        {
+            // Mines — gold-heavy with full rare set
+            _highZoneMines.Add(CreateZoneContentItem(ContentIds.MineGold));
+            _highZoneMines.Add(CreateZoneContentItem(ContentIds.MineGold));
+            _highZoneMines.Add(CreateZoneContentItem(ContentIds.MineGold));
+            _highZoneMines.Add(CreateZoneContentItem(ContentIds.MineCrystals));
+            _highZoneMines.Add(CreateZoneContentItem(ContentIds.MineMercury));
+            _highZoneMines.Add(CreateZoneContentItem(ContentIds.MineGemstones));
+            _highZoneMines.Add(CreateZoneContentItem(ContentIds.AlchemyLab));
+            _highZoneMines.Add(CreateZoneContentItem(ContentIds.AlchemyLab));
+            // Loot
+            _highZoneTreasures.Add(CreateZoneContentItem(IncludeListIds.MythicScrollBox, count: 2, isGroup: true));
+            _highZoneTreasures.Add(CreateZoneContentItem(ContentIds.RandomItemLegendary));
+            _highZoneTreasures.Add(CreateZoneContentItem(ContentIds.RandomItemLegendary));
+            _highZoneTreasures.Add(CreateZoneContentItem(ContentIds.RandomItemEpic));
+            _highZoneTreasures.Add(CreateZoneContentItem(ContentIds.PandoraBox));
+            _highZoneTreasures.Add(CreateZoneContentItem(ContentIds.PandoraBox));
+            _highZoneTreasures.Add(CreateZoneContentItem(ContentIds.PandoraBox));
+            _highZoneTreasures.Add(CreateZoneContentItem(IncludeListIds.PandoraArmyHigh, count: 2, isGroup: true));
+            // Hires
+            _highZoneHires.Add(CreateZoneContentItem(IncludeListIds.RandomHiresHighTier, count: 2, isGroup: true));
+            _highZoneHires.Add(CreateZoneContentItem(IncludeListIds.RandomHiresAllTier, isGroup: true));
+            // Banks
+            _highZoneBanks.Add(CreateZoneContentItem(IncludeListIds.Utopias, count: 2, isGroup: true));
+            _highZoneBanks.Add(CreateZoneContentItem(IncludeListIds.EpicBanks, count: 2, isGroup: true));
+            _highZoneBanks.Add(CreateZoneContentItem(IncludeListIds.UnitBanksBiomeRestricted, isGroup: true));
+            _highZoneBanks.Add(CreateZoneContentItem(IncludeListIds.UnitBanksNoRestriction, count: 2, isGroup: true));
+            _highZoneBanks.Add(CreateZoneContentItem(IncludeListIds.ResourceBanksTier2, isGroup: true));
+            _highZoneBanks.Add(CreateZoneContentItem(IncludeListIds.ResourceBanksTier3, isGroup: true));
+            // Buildings
+            _highZoneBuildings.Add(CreateZoneContentItem(IncludeListIds.VisionBuildingsTier1, isGroup: true));
+            _highZoneBuildings.Add(CreateZoneContentItem(IncludeListIds.HeroBuffBuildingsTier1, isGroup: true));
+            _highZoneBuildings.Add(CreateZoneContentItem(IncludeListIds.HeroStatsTier2, isGroup: true));
+            _highZoneBuildings.Add(CreateZoneContentItem(IncludeListIds.HeroStatsTier3, count: 2, isGroup: true));
+            _highZoneBuildings.Add(CreateZoneContentItem(IncludeListIds.MagicBuildingsTier2, count: 2, isGroup: true));
         }
 
         private void CmbVictory_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -995,7 +1180,22 @@ namespace Olden_Era___Template_Editor
             if (_zoneContentMines.Remove(item)
                 || _treasureContentItems.Remove(item)
                 || _randomHires.Remove(item)
-                || _resourceBanks.Remove(item))
+                || _resourceBanks.Remove(item)
+                || _lowZoneMines.Remove(item)
+                || _lowZoneTreasures.Remove(item)
+                || _lowZoneHires.Remove(item)
+                || _lowZoneBanks.Remove(item)
+                || _lowZoneBuildings.Remove(item)
+                || _medZoneMines.Remove(item)
+                || _medZoneTreasures.Remove(item)
+                || _medZoneHires.Remove(item)
+                || _medZoneBanks.Remove(item)
+                || _medZoneBuildings.Remove(item)
+                || _highZoneMines.Remove(item)
+                || _highZoneTreasures.Remove(item)
+                || _highZoneHires.Remove(item)
+                || _highZoneBanks.Remove(item)
+                || _highZoneBuildings.Remove(item))
                 MarkDirty();
         }
 
@@ -1009,6 +1209,213 @@ namespace Olden_Era___Template_Editor
             _resourceBanks.Clear();
 
             InitializeDefaultPlayerZoneContents();
+            MarkDirty();
+        }
+
+        // ── Low neutral zone content handlers ─────────────────────────────────
+        private void BtnAddLowMineContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            string name = CmbLowMinePreset.SelectedItem as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return;
+            SidMapping? preset = GlobalContent.GetByName(name);
+            if (preset == null) return;
+            _lowZoneMines.Add(CreateZoneContentItem(preset));
+            MarkDirty();
+        }
+
+        private void BtnAddLowTreasureContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            string name = CmbLowTreasurePreset.SelectedItem as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return;
+            SidMapping? preset = GlobalContent.GetByName(name);
+            if (preset == null) return;
+            _lowZoneTreasures.Add(CreateZoneContentItem(preset));
+            MarkDirty();
+        }
+
+        private void BtnAddLowHireContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            string name = CmbLowHirePreset.SelectedItem as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return;
+            SidMapping? preset = GlobalContent.GetByName(name);
+            if (preset == null) return;
+            bool isGroup = preset.Sid.Contains("content", StringComparison.OrdinalIgnoreCase);
+            _lowZoneHires.Add(CreateZoneContentItem(preset, isGroup: isGroup));
+            MarkDirty();
+        }
+
+        private void BtnAddLowBankContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            string name = CmbLowBankPreset.SelectedItem as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return;
+            SidMapping? preset = GlobalContent.GetByName(name);
+            if (preset == null) return;
+            _lowZoneBanks.Add(CreateZoneContentItem(preset, isGroup: true));
+            MarkDirty();
+        }
+
+        private void BtnResetLowZoneContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            _lowZoneMines.Clear();
+            _lowZoneTreasures.Clear();
+            _lowZoneHires.Clear();
+            _lowZoneBanks.Clear();
+            _lowZoneBuildings.Clear();
+            MarkDirty();
+        }
+
+        private void BtnAddLowBuildingContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            string name = CmbLowBuildingPreset.SelectedItem as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return;
+            SidMapping? preset = GlobalContent.GetByName(name);
+            if (preset == null) return;
+            bool isGroup = preset.Sid.Contains("content_list", StringComparison.OrdinalIgnoreCase);
+            _lowZoneBuildings.Add(CreateZoneContentItem(preset, isGroup: isGroup));
+            MarkDirty();
+        }
+
+        // ── Medium neutral zone content handlers ──────────────────────────────
+        private void BtnAddMedMineContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            string name = CmbMedMinePreset.SelectedItem as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return;
+            SidMapping? preset = GlobalContent.GetByName(name);
+            if (preset == null) return;
+            _medZoneMines.Add(CreateZoneContentItem(preset));
+            MarkDirty();
+        }
+
+        private void BtnAddMedTreasureContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            string name = CmbMedTreasurePreset.SelectedItem as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return;
+            SidMapping? preset = GlobalContent.GetByName(name);
+            if (preset == null) return;
+            _medZoneTreasures.Add(CreateZoneContentItem(preset));
+            MarkDirty();
+        }
+
+        private void BtnAddMedHireContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            string name = CmbMedHirePreset.SelectedItem as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return;
+            SidMapping? preset = GlobalContent.GetByName(name);
+            if (preset == null) return;
+            bool isGroup = preset.Sid.Contains("content", StringComparison.OrdinalIgnoreCase);
+            _medZoneHires.Add(CreateZoneContentItem(preset, isGroup: isGroup));
+            MarkDirty();
+        }
+
+        private void BtnAddMedBankContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            string name = CmbMedBankPreset.SelectedItem as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return;
+            SidMapping? preset = GlobalContent.GetByName(name);
+            if (preset == null) return;
+            _medZoneBanks.Add(CreateZoneContentItem(preset, isGroup: true));
+            MarkDirty();
+        }
+
+        private void BtnResetMedZoneContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            _medZoneMines.Clear();
+            _medZoneTreasures.Clear();
+            _medZoneHires.Clear();
+            _medZoneBanks.Clear();
+            _medZoneBuildings.Clear();
+            MarkDirty();
+        }
+
+        private void BtnAddMedBuildingContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            string name = CmbMedBuildingPreset.SelectedItem as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return;
+            SidMapping? preset = GlobalContent.GetByName(name);
+            if (preset == null) return;
+            bool isGroup = preset.Sid.Contains("content_list", StringComparison.OrdinalIgnoreCase);
+            _medZoneBuildings.Add(CreateZoneContentItem(preset, isGroup: isGroup));
+            MarkDirty();
+        }
+
+        // ── High neutral zone content handlers ────────────────────────────────
+        private void BtnAddHighMineContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            string name = CmbHighMinePreset.SelectedItem as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return;
+            SidMapping? preset = GlobalContent.GetByName(name);
+            if (preset == null) return;
+            _highZoneMines.Add(CreateZoneContentItem(preset));
+            MarkDirty();
+        }
+
+        private void BtnAddHighTreasureContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            string name = CmbHighTreasurePreset.SelectedItem as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return;
+            SidMapping? preset = GlobalContent.GetByName(name);
+            if (preset == null) return;
+            _highZoneTreasures.Add(CreateZoneContentItem(preset));
+            MarkDirty();
+        }
+
+        private void BtnAddHighHireContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            string name = CmbHighHirePreset.SelectedItem as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return;
+            SidMapping? preset = GlobalContent.GetByName(name);
+            if (preset == null) return;
+            bool isGroup = preset.Sid.Contains("content", StringComparison.OrdinalIgnoreCase);
+            _highZoneHires.Add(CreateZoneContentItem(preset, isGroup: isGroup));
+            MarkDirty();
+        }
+
+        private void BtnAddHighBankContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            string name = CmbHighBankPreset.SelectedItem as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return;
+            SidMapping? preset = GlobalContent.GetByName(name);
+            if (preset == null) return;
+            _highZoneBanks.Add(CreateZoneContentItem(preset, isGroup: true));
+            MarkDirty();
+        }
+
+        private void BtnResetHighZoneContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            _highZoneMines.Clear();
+            _highZoneTreasures.Clear();
+            _highZoneHires.Clear();
+            _highZoneBanks.Clear();
+            _highZoneBuildings.Clear();
+            MarkDirty();
+        }
+
+        private void BtnAddHighBuildingContent_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsInitialized) return;
+            string name = CmbHighBuildingPreset.SelectedItem as string ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return;
+            SidMapping? preset = GlobalContent.GetByName(name);
+            if (preset == null) return;
+            bool isGroup = preset.Sid.Contains("content_list", StringComparison.OrdinalIgnoreCase);
+            _highZoneBuildings.Add(CreateZoneContentItem(preset, isGroup: isGroup));
             MarkDirty();
         }
 
@@ -1082,6 +1489,9 @@ namespace Olden_Era___Template_Editor
             TournamentPointsToWin = (int)SldTournamentPointsToWin.Value,
             TournamentSaveArmy = ChkTournamentSaveArmy.IsChecked == true,
             PlayerZoneMandatoryContent = BuildPlayerZoneMandatoryContentFromUi(),
+            LowZoneMandatoryContent    = BuildNeutralZoneMandatoryContentFromUi(_lowZoneMines,  _lowZoneTreasures,  _lowZoneHires,  _lowZoneBanks,  _lowZoneBuildings),
+            MedZoneMandatoryContent    = BuildNeutralZoneMandatoryContentFromUi(_medZoneMines,  _medZoneTreasures,  _medZoneHires,  _medZoneBanks,  _medZoneBuildings),
+            HighZoneMandatoryContent   = BuildNeutralZoneMandatoryContentFromUi(_highZoneMines, _highZoneTreasures, _highZoneHires, _highZoneBanks, _highZoneBuildings),
         };
 
         private void ApplySettings(SettingsFile s)
@@ -1142,6 +1552,9 @@ namespace Olden_Era___Template_Editor
             SldTournamentPointsToWin.Value = Math.Clamp(s.TournamentPointsToWin, 1, 10);
             ChkTournamentSaveArmy.IsChecked = s.TournamentSaveArmy;
             ApplyPlayerZoneMandatoryContentFromSettings(s.PlayerZoneMandatoryContent);
+            ApplyNeutralZoneContentFromSettings(s.LowZoneMandatoryContent,  _lowZoneMines,  _lowZoneTreasures,  _lowZoneHires,  _lowZoneBanks,  _lowZoneBuildings);
+            ApplyNeutralZoneContentFromSettings(s.MedZoneMandatoryContent,  _medZoneMines,  _medZoneTreasures,  _medZoneHires,  _medZoneBanks,  _medZoneBuildings);
+            ApplyNeutralZoneContentFromSettings(s.HighZoneMandatoryContent, _highZoneMines, _highZoneTreasures, _highZoneHires, _highZoneBanks, _highZoneBuildings);
             UpdateValueLabels();
             UpdateAdvancedZoneSettingsVisibility();
             UpdatePlayerCastleFactionVisibility();
@@ -1370,6 +1783,9 @@ namespace Olden_Era___Template_Editor
                 }
             },
             PlayerZoneMandatoryContent = BuildPlayerZoneMandatoryContentFromUi(),
+            LowZoneMandatoryContent    = BuildNeutralZoneMandatoryContentFromUi(_lowZoneMines,  _lowZoneTreasures,  _lowZoneHires,  _lowZoneBanks,  _lowZoneBuildings),
+            MedZoneMandatoryContent    = BuildNeutralZoneMandatoryContentFromUi(_medZoneMines,  _medZoneTreasures,  _medZoneHires,  _medZoneBanks,  _medZoneBuildings),
+            HighZoneMandatoryContent   = BuildNeutralZoneMandatoryContentFromUi(_highZoneMines, _highZoneTreasures, _highZoneHires, _highZoneBanks, _highZoneBuildings),
             // Neutral zones between players can be influenced by advanced zone settings, but is functionally independent.
             MinNeutralZonesBetweenPlayers = _advancedZoneSettings ? (int)SldMinNeutralBetweenPlayers.Value : 0,
             MatchPlayerCastleFactions = ChkMatchPlayerCastleFactions.IsChecked == true,
@@ -1554,6 +1970,124 @@ namespace Olden_Era___Template_Editor
                 string.Equals(rule.Type, "MainObject", StringComparison.OrdinalIgnoreCase) &&
                 rule.Args?.Any(arg => arg == "0") == true) == true;
 
+        /// <summary>
+        /// Builds a flat <see cref="ContentItem"/> list from the four UI collections for a
+        /// neutral-zone tier tab (mines, treasures, hires, banks).
+        /// </summary>
+        private List<ContentItem> BuildNeutralZoneMandatoryContentFromUi(
+            ObservableCollection<ZoneContentItemUI> mines,
+            ObservableCollection<ZoneContentItemUI> treasures,
+            ObservableCollection<ZoneContentItemUI> hires,
+            ObservableCollection<ZoneContentItemUI> banks,
+            ObservableCollection<ZoneContentItemUI> buildings)
+        {
+            var result = new List<ContentItem>();
+
+            foreach (var item in mines.Concat(treasures).Concat(hires).Concat(banks).Concat(buildings))
+            {
+                if (item.Count <= 0 || item.SidMapping == null) continue;
+
+                var distance = item.RoadDistance switch
+                {
+                    "Next To" => DistancePresets.NextTo,
+                    "Near"    => DistancePresets.Near,
+                    "Far"     => DistancePresets.Far,
+                    "Very Far" => DistancePresets.VeryFar,
+                    _ => DistancePresets.Medium
+                };
+
+                for (int i = 0; i < item.Count; i++)
+                {
+                    if (item.IsGroup)
+                    {
+                        var groupItem = new ContentItem
+                        {
+                            IncludeLists = [item.SidMapping.Sid],
+                            IsGuarded = item.IsGuarded
+                        };
+                        if (item.RoadDistance != "Any")
+                            groupItem.Rules = [RulePresets.RoadDistance(distance)];
+                        result.Add(groupItem);
+                        continue;
+                    }
+
+                    var builder = ContentItemBuilder.Create(item.SidMapping.Sid).Guarded(item.IsGuarded);
+                    if (mines.Contains(item)) builder.Mine();
+                    if (item.NearCastle) builder.AddRule(RulePresets.NearCastle());
+                    if (item.RoadDistance != "Any") builder.RoadDistance(distance);
+                    result.Add(builder.Build());
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Restores a neutral-zone tier's four UI collections from a persisted content list.
+        /// Clears the collections and leaves them empty when <paramref name="contentItems"/> is
+        /// null or empty (neutral zone tabs start blank by default).
+        /// </summary>
+        private static void ApplyNeutralZoneContentFromSettings(
+            List<ContentItem>? contentItems,
+            ObservableCollection<ZoneContentItemUI> mines,
+            ObservableCollection<ZoneContentItemUI> treasures,
+            ObservableCollection<ZoneContentItemUI> hires,
+            ObservableCollection<ZoneContentItemUI> banks,
+            ObservableCollection<ZoneContentItemUI> buildings)
+        {
+            mines.Clear();
+            treasures.Clear();
+            hires.Clear();
+            banks.Clear();
+            buildings.Clear();
+
+            if (contentItems is null || contentItems.Count == 0)
+                return;
+
+            var grouped = new Dictionary<PlayerZoneContentKey, int>();
+            foreach (var contentItem in contentItems)
+            {
+                bool isGroup = contentItem.IncludeLists is { Count: > 0 };
+                string? sid  = isGroup ? contentItem.IncludeLists![0] : contentItem.Sid;
+                if (string.IsNullOrWhiteSpace(sid)) continue;
+                SidMapping? sidMapping = GlobalContent.GetBySid(sid);
+                if (sidMapping is null) continue;
+                var key = new PlayerZoneContentKey(
+                    sidMapping.Sid,
+                    isGroup,
+                    contentItem.IsMine == true,
+                    contentItem.IsGuarded == true,
+                    HasNearCastleRule(contentItem.Rules),
+                    GetRoadDistanceLabel(contentItem.Rules));
+                grouped[key] = grouped.TryGetValue(key, out int c) ? c + 1 : 1;
+            }
+
+            foreach (var kvp in grouped)
+            {
+                SidMapping? sidMapping = GlobalContent.GetBySid(kvp.Key.Sid);
+                if (sidMapping is null) continue;
+                var uiItem = new ZoneContentItemUI
+                {
+                    SidMapping   = sidMapping,
+                    Count        = kvp.Value,
+                    IsGuarded    = kvp.Key.IsGuarded,
+                    NearCastle   = kvp.Key.NearCastle,
+                    RoadDistance = kvp.Key.RoadDistance,
+                    IsGroup      = kvp.Key.IsGroup
+                };
+                if (kvp.Key.IsMine)
+                    mines.Add(uiItem);
+                else if (IsRandomHireSid(kvp.Key.Sid))
+                    hires.Add(uiItem);
+                else if (IsResourceBankSid(kvp.Key.Sid))
+                    banks.Add(uiItem);
+                else if (IsBuildingSid(kvp.Key.Sid))
+                    buildings.Add(uiItem);
+                else
+                    treasures.Add(uiItem);
+            }
+        }
+
         private static string GetRoadDistanceLabel(List<ContentPlacementRule>? rules)
         {
             ContentPlacementRule? roadRule = rules?.FirstOrDefault(rule =>
@@ -1584,9 +2118,10 @@ namespace Olden_Era___Template_Editor
                 || string.Equals(IncludeListIds.RandomHiresAllTier.Sid, sid, StringComparison.OrdinalIgnoreCase);
 
         private static bool IsResourceBankSid(string sid)
-            => ContentItemGroup.ResourceBanks.Any(item => string.Equals(item.Sid, sid, StringComparison.OrdinalIgnoreCase))
-                || string.Equals(IncludeListIds.ResourceBanksTier1.Sid, sid, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(IncludeListIds.ResourceBanksTier2.Sid, sid, StringComparison.OrdinalIgnoreCase);
+            => ContentItemGroup.ResourceBanks.Any(item => string.Equals(item.Sid, sid, StringComparison.OrdinalIgnoreCase));
+
+        private static bool IsBuildingSid(string sid)
+            => ContentItemGroup.Buildings.Any(item => string.Equals(item.Sid, sid, StringComparison.OrdinalIgnoreCase));
 
         private readonly record struct PlayerZoneContentKey(
             string Sid,

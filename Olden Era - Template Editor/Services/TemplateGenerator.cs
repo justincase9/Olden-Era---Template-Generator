@@ -2694,7 +2694,7 @@ namespace Olden_Era___Template_Editor.Services
                 groups.Add(BuildSpawnMandatoryContent(letter, settings));
 
             foreach (var neutralZone in neutralZones)
-                groups.Add(BuildNeutralMandatoryContent(neutralZone.Letter, neutralZone.CastleCount, settings.SpawnRemoteFootholds, neutralZone.Quality));
+                groups.Add(BuildNeutralMandatoryContent(neutralZone.Letter, neutralZone.CastleCount, settings.SpawnRemoteFootholds, neutralZone.Quality, settings));
 
             return groups;
         }
@@ -2708,17 +2708,39 @@ namespace Olden_Era___Template_Editor.Services
             };
         }
 
-        private static MandatoryContentGroup BuildNeutralMandatoryContent(string letter, int castleCount, bool spawnFootholds, NeutralZoneQuality quality)
+        private static MandatoryContentGroup BuildNeutralMandatoryContent(string letter, int castleCount, bool spawnFootholds, NeutralZoneQuality quality, GeneratorSettings settings)
         {
+            List<ContentItem> content;
+            var userContent = quality switch
+            {
+                NeutralZoneQuality.Low    => settings.LowZoneMandatoryContent,
+                NeutralZoneQuality.High   => settings.HighZoneMandatoryContent,
+                _                         => settings.MedZoneMandatoryContent,
+            };
+
+            if (userContent is { Count: > 0 })
+            {
+                // User has configured explicit content for this tier — use it and prepend a
+                // remote foothold if needed (same behaviour as the player-zone path).
+                content = new List<ContentItem>();
+                if (spawnFootholds)
+                    content.Add(ContentPresets.RemoteFoothold(castleCount));
+                content.AddRange(userContent);
+            }
+            else
+            {
+                content = quality switch
+                {
+                    NeutralZoneQuality.Low  => ZoneContentManager.BuildLowNeutralMandatoryContent(castleCount, spawnFootholds),
+                    NeutralZoneQuality.High => ZoneContentManager.BuildHighNeutralMandatoryContent(castleCount, spawnFootholds),
+                    _                       => ZoneContentManager.BuildMediumNeutralMandatoryContent(castleCount, spawnFootholds),
+                };
+            }
+
             return new MandatoryContentGroup
             {
-                Name = $"mandatory_content_neutral_{letter}",
-                Content = quality switch
-                {
-                    NeutralZoneQuality.Low    => ZoneContentManager.BuildLowNeutralMandatoryContent(castleCount, spawnFootholds),
-                    NeutralZoneQuality.High   => ZoneContentManager.BuildHighNeutralMandatoryContent(castleCount, spawnFootholds),
-                    _                         => ZoneContentManager.BuildMediumNeutralMandatoryContent(castleCount, spawnFootholds),
-                }
+                Name    = $"mandatory_content_neutral_{letter}",
+                Content = content
             };
         }
     }

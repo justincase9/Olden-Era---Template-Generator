@@ -90,11 +90,40 @@ namespace OldenEraTemplateEditor.Services.ContentManagement
     {
         public static IReadOnlyList<SidMapping> GetAll() => SidReflection.GetSidMappings(typeof(IncludeListIds));
 
-        public static readonly SidMapping RandomHiresLowTier = new() { Sid = "content_list_building_random_hires_low_tier", Name = "Random Hires Low Tier" };
+        // ── Random hires ─────────────────────────────────────────────────────
+        public static readonly SidMapping RandomHiresLowTier  = new() { Sid = "content_list_building_random_hires_low_tier",  Name = "Random Hires Low Tier" };
         public static readonly SidMapping RandomHiresHighTier = new() { Sid = "content_list_building_random_hires_high_tier", Name = "Random Hires High Tier" };
-        public static readonly SidMapping RandomHiresAllTier = new() { Sid = "basic_content_list_building_random_hires", Name = "Random Hires All Tier" };
+        public static readonly SidMapping RandomHiresAllTier  = new() { Sid = "basic_content_list_building_random_hires",     Name = "Random Hires All Tier" };
+
+        // ── Resource banks (by tier) ──────────────────────────────────────────
         public static readonly SidMapping ResourceBanksTier1 = new() { Sid = "basic_content_list_building_guarded_resource_banks_tier_1", Name = "Resource Banks T1" };
         public static readonly SidMapping ResourceBanksTier2 = new() { Sid = "basic_content_list_building_guarded_resource_banks_tier_2", Name = "Resource Banks T2" };
+        public static readonly SidMapping ResourceBanksTier3 = new() { Sid = "basic_content_list_building_guarded_resource_banks_tier_3", Name = "Resource Banks T3" };
+
+        // ── Unit banks ────────────────────────────────────────────────────────
+        public static readonly SidMapping UnitBanksBiomeRestricted   = new() { Sid = "basic_content_list_building_guarded_units_banks_only_biome_restriction", Name = "Unit Banks (Biome)" };
+        public static readonly SidMapping UnitBanksNoRestriction      = new() { Sid = "basic_content_list_building_guarded_units_banks_no_biome_restriction",   Name = "Unit Banks (Any)" };
+        public static readonly SidMapping EpicBanks                   = new() { Sid = "content_list_building_epic_guarded_resource_banks",                       Name = "Epic Guarded Banks" };
+        public static readonly SidMapping Utopias                     = new() { Sid = "content_list_building_utopia",                                            Name = "Utopia" };
+
+        // ── Mines (include lists) ─────────────────────────────────────────────
+        public static readonly SidMapping RareMinesByBiome = new() { Sid = "basic_content_list_rare_mines_by_biome", Name = "Rare Mines (Biome)" };
+        public static readonly SidMapping RareMinesAny     = new() { Sid = "basic_content_list_rare_mines",         Name = "Rare Mines (Any)" };
+
+        // ── Treasures / loot ─────────────────────────────────────────────────
+        public static readonly SidMapping PandoraArmyLow  = new() { Sid = "content_list_pickup_pandora_box_army_low_tier",  Name = "Pandora Army (Low)"  };
+        public static readonly SidMapping PandoraArmyHigh = new() { Sid = "content_list_pickup_pandora_box_army_high_tier", Name = "Pandora Army (High)" };
+        public static readonly SidMapping RandomItems      = new() { Sid = "basic_content_list_pickup_random_items",        Name = "Random Items"         };
+        public static readonly SidMapping MythicScrollBox = new() { Sid = "basic_content_list_pickup_mythic_scroll_box",   Name = "Mythic Scroll Box"    };
+
+        // ── Buildings ────────────────────────────────────────────────────────
+        public static readonly SidMapping VisionBuildingsTier1     = new() { Sid = "basic_content_list_vision_buildings_tier_1",                   Name = "Vision Buildings T1"     };
+        public static readonly SidMapping HeroBuffBuildingsTier1   = new() { Sid = "basic_content_list_building_hero_buff_tier_1",                  Name = "Hero Buff Buildings T1"  };
+        public static readonly SidMapping HeroStatsTier1           = new() { Sid = "basic_content_list_building_hero_stats_and_skills_tier_1",      Name = "Hero Stats Buildings T1" };
+        public static readonly SidMapping HeroStatsTier2           = new() { Sid = "basic_content_list_building_hero_stats_and_skills_tier_2",      Name = "Hero Stats Buildings T2" };
+        public static readonly SidMapping HeroStatsTier3           = new() { Sid = "basic_content_list_building_hero_stats_and_skills_tier_3",      Name = "Hero Stats Buildings T3" };
+        public static readonly SidMapping MagicBuildingsTier1      = new() { Sid = "basic_content_list_building_magic_tier_1",                      Name = "Magic Buildings T1"      };
+        public static readonly SidMapping MagicBuildingsTier2      = new() { Sid = "basic_content_list_building_magic_tier_2",                      Name = "Magic Buildings T2"      };
     }
 
     public static class GlobalContent

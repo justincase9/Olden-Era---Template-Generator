@@ -61,6 +61,9 @@ namespace Olden_Era___Template_Editor.Models
         [JsonPropertyName("tournamentPointsToWin")] public int TournamentPointsToWin        { get; set; } = 2;
         [JsonPropertyName("tournamentSaveArmy")] public bool TournamentSaveArmy             { get; set; } = true;
         [JsonPropertyName("playerZoneMandatoryContent")] public List<ContentItem>? PlayerZoneMandatoryContent { get; set; }
+        [JsonPropertyName("lowZoneMandatoryContent")]    public List<ContentItem>? LowZoneMandatoryContent    { get; set; }
+        [JsonPropertyName("medZoneMandatoryContent")]    public List<ContentItem>? MedZoneMandatoryContent    { get; set; }
+        [JsonPropertyName("highZoneMandatoryContent")]   public List<ContentItem>? HighZoneMandatoryContent   { get; set; }
 
         // Legacy setting from v0.2 and earlier; when present, it seeds both split density sliders.
         [JsonPropertyName("contentDensity")]    public int?    ContentDensityPercent        { get; set; }
